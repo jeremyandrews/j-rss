@@ -1,0 +1,13 @@
+[package]
+name = "j-rss"
+version = "0.1.0"
+authors = ["Jeremy Andrews <jeremy@tag1consulting.com>"]
+edition = "2018"
+
+[dependencies]
+rss = { version = "1.0", features = ["from_url"] }
+reqwest = { version = "0.10", features = ["json"] }
+tokio = { version = "0.2", features = ["macros"] }
+serde = "1.0"
+serde_json = "1.0"
+
