@@ -672,6 +672,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8b7a7c0c47db5545ed3fef7468ee7bb5b74691498139e4b3f6a20685dc6dd8e"
 
 [[package]]
+name = "j-rss"
+version = "0.1.0"
+dependencies = [
+ "reqwest 0.10.4",
+ "rss",
+ "serde",
+ "serde_json",
+ "tokio 0.2.13",
+]
+
+[[package]]
 name = "js-sys"
 version = "0.3.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1252,17 +1263,6 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "winreg",
-]
-
-[[package]]
-name = "rss"
-version = "0.1.0"
-dependencies = [
- "reqwest 0.10.4",
- "rss 1.9.0",
- "serde",
- "serde_json",
- "tokio 0.2.13",
 ]
 
 [[package]]
