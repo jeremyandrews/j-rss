@@ -1,4 +1,6 @@
+use ammonia::Builder;
 use chrono::{DateTime, Duration};
+use maplit::hashset;
 use rss::Channel;
 use serde::Deserialize;
 
@@ -21,6 +23,9 @@ async fn main() -> Result<(), reqwest::Error> {
     let lang = "it-en";
     let format = "plain";
 
+    // allowed tags is an empty set, strip all HTML
+    let tags = hashset![];
+
     let feeds_with_timestamp: Vec<String> = vec![
         "http://www.noitv.it/localita/valle-del-serchio/rss/".to_string(),
         "https://www.lagazzettadelserchio.it/rss/articoli/".to_string(),
@@ -35,7 +40,7 @@ async fn main() -> Result<(), reqwest::Error> {
                 std::process::exit(1);
             }
         };
-        println!("Parsing '{}'...", channel.title());
+        println!(">> Parsing '{}'...", channel.title());
         for item in channel.items() {
             let pub_date = match item.pub_date() {
                 Some(p) => p,
@@ -70,10 +75,17 @@ async fn main() -> Result<(), reqwest::Error> {
                     }
                 };
                 text.push_str(description);
-                println!("{}\n--\n{}\n--", text, pub_date);
+
+                // allowed tags is an empty set, strip all HTML
+                let tags = hashset![];
+                let cleaned_text = Builder::new()
+                    .tags(tags.clone())
+                    .clean(&text)
+                    .to_string();
+                println!("{}\n--\n{}\n--", cleaned_text, pub_date);
 
                 // Translate
-                let url = format!("{}?key={}&text={}&lang={}&format={}", base, api_key, strip_anchor(&text), lang, format);
+                let url = format!("{}?key={}&text={}&lang={}&format={}", base, api_key, strip_anchor(&cleaned_text), lang, format);
                 let response = reqwest::get(&url)
                     .await?
                     .json::<Response>()
@@ -100,7 +112,7 @@ async fn main() -> Result<(), reqwest::Error> {
             std::process::exit(1);
         }
     };
-    println!("Parsing '{}'...", channel.title());
+    println!(">> Parsing '{}'...", channel.title());
     for item in channel.items() {
         let mut text = String::new();
         let title = match item.title() {
@@ -119,7 +131,12 @@ async fn main() -> Result<(), reqwest::Error> {
             }
         };
         text.push_str(description);
-        println!("{}\n--", text);
+
+        let cleaned_text = Builder::new()
+            .tags(tags.clone())
+            .clean(&text)
+            .to_string();
+        println!("{}\n--", cleaned_text);
 
         // Translate
         let url = format!("{}?key={}&text={}&lang={}&format={}", base, api_key, strip_anchor(&text), lang, format);
