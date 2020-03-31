@@ -6,8 +6,11 @@ use serde::Deserialize;
 #[derive(Deserialize, Debug)]
 struct Response {
     code: usize,
-    lang: String,
     text: Vec<String>,
+}
+
+fn strip_anchor(text: &str) -> String {
+    str::replace(text, "#", " ")
 }
 
 #[tokio::main]
@@ -24,7 +27,7 @@ async fn main() -> Result<(), reqwest::Error> {
         "https://www.lagazzettadelserchio.it/rss/brevi/".to_string(),
     ];
     for feed in feeds_with_timestamp {
-        // Feed includes timestamps, only include articles from the past-24 hours
+        // Feed includes timestamps, only include articles from the past-12 hours
         let channel = match Channel::from_url(&feed) {
             Ok(c) => c,
             Err(e) => {
@@ -48,9 +51,8 @@ async fn main() -> Result<(), reqwest::Error> {
                     DateTime::parse_from_rfc2822("Mon, 30 Mar 2020 05:32:05 +0000").unwrap()
                 }
             };
-            let day_before_now = chrono::offset::Utc::now().checked_sub_signed(Duration::days(1)).unwrap();
+            let day_before_now = chrono::offset::Utc::now().checked_sub_signed(Duration::hours(12)).unwrap();
             if timestamp > day_before_now {
-                println!("timestamp({:?} > day_before_now({:?})", timestamp, day_before_now);
                 let mut text = String::new();
                 let title = match item.title() {
                     Some(t) => t,
@@ -71,7 +73,7 @@ async fn main() -> Result<(), reqwest::Error> {
                 println!("{}\n--\n{}\n--", text, pub_date);
 
                 // Translate
-                let url = format!("{}?key={}&text={}&lang={}&format={}", base, api_key, text, lang, format);
+                let url = format!("{}?key={}&text={}&lang={}&format={}", base, api_key, strip_anchor(&text), lang, format);
                 let response = reqwest::get(&url)
                     .await?
                     .json::<Response>()
@@ -120,7 +122,7 @@ async fn main() -> Result<(), reqwest::Error> {
         println!("{}\n--", text);
 
         // Translate
-        let url = format!("{}?key={}&text={}&lang={}&format={}", base, api_key, text, lang, format);
+        let url = format!("{}?key={}&text={}&lang={}&format={}", base, api_key, strip_anchor(&text), lang, format);
         let response = reqwest::get(&url)
             .await?
             .json::<Response>()
